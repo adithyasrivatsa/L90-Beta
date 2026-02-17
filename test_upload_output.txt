@@ -1,3 +1,0 @@
-﻿Login OK, token: d7b2369903...
-Upload HTTP status: 200
-Upload response body: {"filename":"test_upload.txt","collection":"user_private_collection","chunks_stored":1,"document_id":"doc_c9d7f31a"}

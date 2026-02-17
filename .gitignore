@@ -33,6 +33,26 @@ Thumbs.db
 htmlcov/
 .coverage
 
+# Logs
+*.log
+server_log*.txt
+uvicorn*.log
+
+# Debug / test output artifacts
+*_output.txt
+*_test.txt
+embed_test.txt
+models_list.txt
+pip_info.txt
+ef_source.txt
+test_nomic.txt
+test_final*.txt
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
 # Distribution
 *.whl
 *.tar.gz
