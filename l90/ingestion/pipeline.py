@@ -20,27 +20,41 @@ logger = logging.getLogger(__name__)
 SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".md", ".docx"}
 
 
-def _load_pdf(path: Path) -> str:
-    """Load text from a PDF file."""
+def _load_pdf(path: Path) -> list[tuple[int, str]]:
+    """Load text from a PDF file, preserving page boundaries.
+
+    Returns:
+        List of (page_number, text) tuples — 1-indexed page numbers.
+    """
     from pypdf import PdfReader
 
     reader = PdfReader(str(path))
-    pages = [page.extract_text() or "" for page in reader.pages]
-    return "\n\n".join(pages)
+    pages: list[tuple[int, str]] = []
+    for i, page in enumerate(reader.pages):
+        text = page.extract_text() or ""
+        if text.strip():
+            pages.append((i + 1, text))
+    return pages
 
 
-def _load_txt(path: Path) -> str:
-    """Load text from a plain text or markdown file."""
-    return path.read_text(encoding="utf-8")
+def _load_txt(path: Path) -> list[tuple[int, str]]:
+    """Load text from a plain text or markdown file.
+
+    Returns the entire file as page 1 (no page concept for plain text).
+    """
+    return [(1, path.read_text(encoding="utf-8"))]
 
 
-def _load_docx(path: Path) -> str:
-    """Load text from a DOCX file."""
+def _load_docx(path: Path) -> list[tuple[int, str]]:
+    """Load text from a DOCX file.
+
+    Returns the entire file as page 1 (DOCX doesn't expose page breaks reliably).
+    """
     from docx import Document  # python-docx
 
     doc = Document(str(path))
     paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
-    return "\n\n".join(paragraphs)
+    return [(1, "\n\n".join(paragraphs))]
 
 
 # ── Loader dispatch ────────────────────────────────────────────
@@ -103,22 +117,19 @@ class IngestionPipeline:
                 f"Supported: {SUPPORTED_EXTENSIONS}"
             )
 
-        # Load document text
+        # Load document pages — list of (page_number, text)
         loader = _LOADERS[path.suffix.lower()]
-        raw_text = loader(path)
+        pages = loader(path)
 
-        if not raw_text.strip():
+        if not pages or not any(text.strip() for _, text in pages):
             logger.warning("Empty document: %s", path)
             return 0
 
-        # Generate document ID (deterministic hash of content)
-        doc_id = hashlib.sha256(raw_text.encode()).hexdigest()[:16]
+        # Generate document ID (deterministic hash of full content)
+        full_text = "\n\n".join(text for _, text in pages)
+        doc_id = hashlib.sha256(full_text.encode()).hexdigest()[:16]
 
-        # Split into chunks
-        chunks = self._splitter.split_text(raw_text)
-        logger.info("Split '%s' into %d chunks", path.name, len(chunks))
-
-        # Build metadata for each chunk
+        # Build base metadata
         base_meta: dict[str, Any] = {
             "source": path.name,
             "source_type": source_type,
@@ -132,28 +143,42 @@ class IngestionPipeline:
         if extra_metadata:
             base_meta.update(extra_metadata)
 
-        metadatas = []
-        ids = []
-        for i, _chunk in enumerate(chunks):
-            chunk_meta = {**base_meta, "chunk_index": i}
-            metadatas.append(chunk_meta)
-            ids.append(f"{doc_id}_chunk_{i}")
+        # Chunk per-page to preserve page boundaries in metadata
+        all_chunks: list[str] = []
+        all_metadatas: list[dict[str, Any]] = []
+        all_ids: list[str] = []
+        global_chunk_idx = 0
+
+        for page_num, page_text in pages:
+            page_chunks = self._splitter.split_text(page_text)
+            for chunk_text in page_chunks:
+                chunk_meta = {
+                    **base_meta,
+                    "chunk_index": global_chunk_idx,
+                    "page_number": page_num,
+                }
+                all_chunks.append(chunk_text)
+                all_metadatas.append(chunk_meta)
+                all_ids.append(f"{doc_id}_chunk_{global_chunk_idx}")
+                global_chunk_idx += 1
+
+        logger.info("Split '%s' into %d chunks across %d pages", path.name, len(all_chunks), len(pages))
 
         # Store in ChromaDB (embedding handled by collection's embedding function)
         await self._store.add_documents(
             collection_name=collection_name,
-            documents=chunks,
-            metadatas=metadatas,
-            ids=ids,
+            documents=all_chunks,
+            metadatas=all_metadatas,
+            ids=all_ids,
         )
 
         logger.info(
             "Ingested '%s' → %d chunks into '%s'",
             path.name,
-            len(chunks),
+            len(all_chunks),
             collection_name,
         )
-        return len(chunks)
+        return len(all_chunks)
 
     async def ingest_approved_library_document(
         self,

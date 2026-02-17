@@ -101,6 +101,7 @@ class QueryResponse(BaseModel):
     code_verification: dict[str, Any] = Field(default_factory=dict)
     deep_reasoning: list[dict[str, Any]] = Field(default_factory=list)
     latex_equations: list[str] = Field(default_factory=list)
+    sources: list[dict[str, Any]] = Field(default_factory=list)
     metadata: dict[str, Any]
 
 class UploadResponse(BaseModel):
@@ -237,6 +238,7 @@ async def run_query(request: QueryRequest, x_token: str | None = Header(default=
         code_verification=result.get("code_verification", {}),
         deep_reasoning=result.get("deep_reasoning", []),
         latex_equations=result.get("latex_equations", []),
+        sources=result.get("sources", []),
         metadata=result.get("metadata", {}),
     )
 

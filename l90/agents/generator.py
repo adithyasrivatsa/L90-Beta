@@ -25,7 +25,11 @@ Mode: STRICT (Fortress Mode).
 
 CRITICAL RULES:
 1. Answer ONLY using the verified information provided below.
-2. Every claim MUST be traceable to a specific source chunk using [Source: filename] notation.
+2. Every claim MUST be cited with precise source references using this format:
+   [Source: filename, Page X, Chunk N]
+   - If page number is available, always include it
+   - If only chunk index is available, use: [Source: filename, Chunk N]
+   - NEVER use just [Source: filename] alone
 3. If the information is insufficient, respond EXACTLY with:
    "Insufficient verified information."
 4. Do NOT use your prior knowledge. Do NOT hallucinate.
@@ -52,7 +56,11 @@ CRITICAL RULES:
 3. Show your reasoning! Explain the "why" and "how" behind the answer.
 4. If you used Python code verification, mention the proven result.
 5. Connect the dots. Use the "Deep Reasoning" insights provided.
-6. Cite sources appropriately but naturally (e.g., "As found in [Source: doc.pdf]...").
+6. Cite sources precisely using this format:
+   [Source: filename, Page X, Chunk N]
+   - Example: "As shown in [Source: physics.pdf, Page 12, Chunk 3]..."
+   - If page is unavailable: [Source: doc.txt, Chunk 5]
+   - NEVER use just [Source: filename] alone
 7. If data is missing for a specific part, admit it gracefully, but answer what you can.
 8. Be friendly! Use clear headings and structured lists.
 
@@ -98,11 +106,27 @@ class GeneratorAgent(BaseAgent):
 
         # ── Build Context ──────────────────────────────────────────
 
-        # 1. Verified Chunks
-        chunk_context = "\n\n".join(
-            f"[Source: {c.get('metadata', {}).get('source', 'unknown')}]\n{c.get('document', '')}"
-            for c in blackboard.retrieved_chunks
-        )
+        # 1. Verified Chunks — with page number, chunk index, and relevance
+        chunk_lines: list[str] = []
+        for c in blackboard.retrieved_chunks:
+            meta = c.get("metadata", {})
+            source = meta.get("source", "unknown")
+            page = meta.get("page_number", None)
+            chunk_idx = meta.get("chunk_index", "?")
+            distance = c.get("distance", None)
+
+            # Build a rich header for each chunk
+            header_parts = [f"Source: {source}"]
+            if page is not None:
+                header_parts.append(f"Page: {page}")
+            header_parts.append(f"Chunk: {chunk_idx}")
+            if distance is not None:
+                header_parts.append(f"Relevance: {1 - distance:.2f}")
+
+            header = " | ".join(header_parts)
+            chunk_lines.append(f"[{header}]\n{c.get('document', '')}")
+
+        chunk_context = "\n\n".join(chunk_lines)
 
         # 2. Analysis Results
         analysis_context = ""

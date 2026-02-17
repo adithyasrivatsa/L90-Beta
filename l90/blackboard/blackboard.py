@@ -64,6 +64,10 @@ class Blackboard:
     # ── LaTeX Equations ────────────────────────────────────────
     latex_equations: list[str] = field(default_factory=list)
 
+    # ── Sources (structured citation references) ───────────────
+    # Each entry: {source, page_number, chunk_index, relevance_score, excerpt}
+    sources: list[dict[str, Any]] = field(default_factory=list)
+
     # ── Metadata ───────────────────────────────────────────────
     metadata: dict[str, Any] = field(default_factory=dict)
     created_at: float = field(default_factory=time.time)
@@ -117,6 +121,7 @@ class Blackboard:
             "code_verification": self.code_verification,
             "deep_reasoning": self.deep_reasoning,
             "latex_equations": self.latex_equations,
+            "sources": self.sources,
             "metadata": self.metadata,
             "created_at": self.created_at,
         }
@@ -142,4 +147,5 @@ class Blackboard:
         self.code_verification = {}
         self.deep_reasoning = []
         self.latex_equations = []
+        self.sources = []
         self.metadata = {}

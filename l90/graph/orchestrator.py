@@ -114,9 +114,30 @@ class SwarmOrchestrator:
         bb.metadata["agents_used"] = complexity
         bb.metadata["agent_timings"] = timings
 
+        # ── Build structured sources from retrieved chunks ─────
+        seen_ids: set[str] = set()
+        for chunk in bb.retrieved_chunks:
+            chunk_id = chunk.get("id", "")
+            if chunk_id in seen_ids:
+                continue
+            seen_ids.add(chunk_id)
+
+            meta = chunk.get("metadata", {})
+            distance = chunk.get("distance", 1.0)
+            doc_text = chunk.get("document", "")
+
+            bb.sources.append({
+                "source": meta.get("source", "unknown"),
+                "page_number": meta.get("page_number", None),
+                "chunk_index": meta.get("chunk_index", None),
+                "relevance_score": round(1 - distance, 3) if distance is not None else None,
+                "excerpt": doc_text[:200] + ("…" if len(doc_text) > 200 else ""),
+                "collection": chunk.get("collection", ""),
+            })
+
         logger.info(
-            "Swarm complete: complexity=%s, elapsed=%.2fs, answer_len=%d",
-            complexity, elapsed, len(bb.final_answer),
+            "Swarm complete: complexity=%s, elapsed=%.2fs, answer_len=%d, sources=%d",
+            complexity, elapsed, len(bb.final_answer), len(bb.sources),
         )
 
         return bb.to_dict()
