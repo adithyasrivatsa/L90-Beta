@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "l90"
+version = "0.1.0"
+description = "L90: Closed-World Agentic Swarm RAG System"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # LLM orchestration
+    "langgraph>=1.0.7",
+    "langchain-core>=0.3.0",
+    "langchain-text-splitters>=0.3.0",
+    # Google Gemini
+    "google-genai>=1.0.0",
+    "langchain-google-genai>=2.0.0",
+    # Vector database
+    "chromadb>=0.5.0",
+    # Document loaders
+    "pypdf>=4.0.0",
+    "python-docx>=1.0.0",
+    # API server
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "python-multipart>=0.0.9",
+    # Config
+    "python-dotenv>=1.0.0",
+    # Async
+    "aiofiles>=24.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.0",
+]
+redis = [
+    "redis>=5.0.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["l90*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
