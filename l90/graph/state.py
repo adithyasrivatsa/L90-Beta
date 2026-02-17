@@ -53,5 +53,14 @@ class GraphState(TypedDict, total=False):
     execution_plan: dict[str, Any]
     grounding_report: dict[str, Any]
 
+    # Code verification (math/physics proofs)
+    code_verification: dict[str, Any]
+
+    # Deep reasoning (Partial mode synthesis)
+    deep_reasoning: Annotated[list[dict[str, Any]], _merge_lists]
+
+    # LaTeX equations extracted
+    latex_equations: Annotated[list[str], _merge_lists]
+
     # Metadata
     metadata: dict[str, Any]

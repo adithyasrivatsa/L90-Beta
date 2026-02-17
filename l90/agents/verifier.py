@@ -1,4 +1,7 @@
-"""Verification agent — checks mathematical, physics, and logical correctness."""
+"""Verification agent — checks mathematical, physics, and logical correctness.
+
+Enhanced: dimensional analysis, numerical bounds check, and code execution trigger validation.
+"""
 
 from __future__ import annotations
 
@@ -13,21 +16,24 @@ from l90.tracing.logger import ReasoningTraceLogger
 logger = logging.getLogger(__name__)
 
 VERIFICATION_SYSTEM_PROMPT = """\
-You are a Verification Agent in L90, a zero-hallucination scientific RAG system.
+You are a Verification Agent in L90, a NASA/DARPA-grade scientific RAG system.
 
 Your job is to verify the analysis results against the original retrieved chunks.
 
 Check for:
-1. Mathematical correctness — are formulas and calculations accurate?
-2. Physics correctness — do physical claims obey known laws?
-3. Logical consistency — are there contradictions between extracted facts?
-4. Document grounding — is every claim traceable to a specific chunk?
+1. **Mathematical correctness**: Are formulas and calculations accurate?
+2. **Physics correctness**:
+   - Do physical claims obey known laws?
+   - **Dimensional Analysis**: Do the units matches? (e.g., $E=mc^2$ -> Joules = kg * (m/s)^2)
+3. **Numerical Bounds**: Are the values physically reasonable? (e.g., velocity <= c)
+4. **Logical consistency**: Are there contradictions between extracted facts?
+5. **Document grounding**: Is every claim traceable to a specific chunk?
 
 You MUST respond with a JSON object:
 {
   "verification_passed": true/false,
   "math_check": {"passed": true/false, "issues": ["issue1", ...]},
-  "physics_check": {"passed": true/false, "issues": ["issue1", ...]},
+  "physics_check": {"passed": true/false, "issues": ["issue1", ...], "dimensional_analysis": "valid/invalid"},
   "logic_check": {"passed": true/false, "issues": ["issue1", ...]},
   "grounding_check": {"passed": true/false, "ungrounded_claims": ["claim1", ...]},
   "confidence_score": 0.0-1.0,
@@ -39,7 +45,7 @@ Be STRICT. If ANY check fails, set verification_passed to false.
 
 
 class VerificationAgent(BaseAgent):
-    """Verifies analysis results for correctness and document grounding."""
+    """Verifies analysis results for correctness, grounding, and physical validity."""
 
     def __init__(self, trace_logger: ReasoningTraceLogger | None = None) -> None:
         super().__init__(name="VerificationAgent", trace_logger=trace_logger)
@@ -66,22 +72,28 @@ class VerificationAgent(BaseAgent):
 
         # Build context: analysis results + original chunks for grounding check
         chunk_summary = "\n".join(
-            f"[Chunk {i}] {c.get('document', '')[:200]}"
+            f"[Chunk {i}] {c.get('document', '')[:500]}"  # More context for verification
             for i, c in enumerate(blackboard.retrieved_chunks)
         )
 
         analysis_summary = ""
         for i, result in enumerate(blackboard.analysis_results):
             analysis_summary += f"\n[Analysis {i}]\n"
-            for key in ("formulas", "facts", "constraints", "relationships", "summary"):
+            for key in ("formulas", "facts", "constraints", "relationships", "summary", "proof_steps"):
                 if key in result:
                     analysis_summary += f"  {key}: {result[key]}\n"
+
+        # Check if code verification was performed
+        code_context = ""
+        if blackboard.code_verification:
+            code_context = f"\nPython Code Verification Result: {blackboard.code_verification}\n"
 
         prompt = (
             f"User Query: {blackboard.query}\n\n"
             f"Original Retrieved Chunks:\n{chunk_summary}\n\n"
             f"Analysis Results:\n{analysis_summary}\n\n"
-            "Verify these results for correctness and grounding."
+            f"{code_context}\n"
+            "Verify these results for correctness, grounding, and physical validity."
         )
 
         try:
@@ -90,6 +102,11 @@ class VerificationAgent(BaseAgent):
                 system_instruction=VERIFICATION_SYSTEM_PROMPT,
                 temperature=0.0,
             )
+
+            # If code verification failed, force verification failure
+            if blackboard.code_verification and not blackboard.code_verification.get("success", True):
+                result["verification_passed"] = False
+                result["math_check"] = {"passed": False, "issues": ["Python code verification failed"]}
 
             verification_entry = {
                 "verification_passed": result.get("verification_passed", False),

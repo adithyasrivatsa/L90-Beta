@@ -1,9 +1,16 @@
-"""Gemini 2.5 Flash model wrapper — implements BaseModelWrapper."""
+"""Gemini 2.5 Flash model wrapper — implements BaseModelWrapper.
+
+Uses asyncio.run_in_executor to make the synchronous google-genai SDK
+truly non-blocking inside the async event loop.
+"""
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 from typing import Any
 
 from google import genai
@@ -13,6 +20,9 @@ from l90 import config
 from l90.models.provider import BaseModelWrapper
 
 logger = logging.getLogger(__name__)
+
+# Shared thread pool for Gemini calls — avoids creating threads per request
+_gemini_executor = ThreadPoolExecutor(max_workers=6, thread_name_prefix="gemini")
 
 
 class GeminiFlashModel(BaseModelWrapper):
@@ -31,15 +41,14 @@ class GeminiFlashModel(BaseModelWrapper):
     def model_name(self) -> str:
         return self._name
 
-    async def generate(
+    def _sync_generate(
         self,
         prompt: str,
-        *,
-        system_instruction: str | None = None,
-        temperature: float = 0.0,
-        max_tokens: int = 4096,
-        response_format: dict[str, Any] | None = None,
+        system_instruction: str | None,
+        temperature: float,
+        max_tokens: int,
     ) -> str:
+        """Synchronous Gemini call — runs in a thread pool."""
         gen_config = types.GenerateContentConfig(
             temperature=temperature,
             max_output_tokens=max_tokens,
@@ -55,6 +64,28 @@ class GeminiFlashModel(BaseModelWrapper):
         text = response.text or ""
         logger.debug("Gemini [%s] generated %d chars", self._role, len(text))
         return text
+
+    async def generate(
+        self,
+        prompt: str,
+        *,
+        system_instruction: str | None = None,
+        temperature: float = 0.0,
+        max_tokens: int = 4096,
+        response_format: dict[str, Any] | None = None,
+    ) -> str:
+        """Truly async generate — offloads blocking SDK call to thread pool."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            _gemini_executor,
+            partial(
+                self._sync_generate,
+                prompt,
+                system_instruction,
+                temperature,
+                max_tokens,
+            ),
+        )
 
     async def generate_json(
         self,

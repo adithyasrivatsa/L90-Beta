@@ -9,7 +9,7 @@ import chromadb
 from chromadb.config import Settings
 
 from l90 import config
-from l90.vectordb.embedding import GeminiEmbeddingProvider
+from l90.vectordb.nomic_embedding import NomicEmbeddingProvider
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +27,10 @@ class ChromaStore:
     def __init__(
         self,
         persist_directory: str | None = None,
-        embedding_provider: GeminiEmbeddingProvider | None = None,
+        embedding_provider: NomicEmbeddingProvider | None = None,
     ) -> None:
         self._persist_dir = persist_directory or config.CHROMA_PERSIST_DIR
-        self._embedding_fn = embedding_provider or GeminiEmbeddingProvider()
+        self._embedding_fn = embedding_provider or NomicEmbeddingProvider()
 
         self._client = chromadb.PersistentClient(
             path=self._persist_dir,
@@ -59,11 +59,18 @@ class ChromaStore:
 
     def list_collections(self) -> list[str]:
         """Return names of all existing collections."""
-        return [c.name for c in self._client.list_collections()]
+        try:
+            collections = self._client.list_collections()
+            # Handle both old (Collection objects) and new (string) ChromaDB APIs
+            if collections and hasattr(collections[0], 'name'):
+                return [c.name for c in collections]
+            return [str(c) for c in collections]
+        except Exception:
+            return []
 
     # ── Document operations ────────────────────────────────────
 
-    def add_documents(
+    async def add_documents(
         self,
         collection_name: str,
         documents: list[str],
@@ -72,6 +79,10 @@ class ChromaStore:
     ) -> None:
         """Add documents with metadata to a collection.
 
+        Pre-embeds documents asynchronously before storing, bypassing
+        ChromaDB's sync embedding function which conflicts with uvicorn's
+        event loop and the google-genai SDK error handling.
+
         Args:
             collection_name: Target collection.
             documents: Text chunks.
@@ -79,10 +90,15 @@ class ChromaStore:
             ids: Unique IDs for each chunk.
         """
         collection = self.get_or_create_collection(collection_name)
+
+        # Pre-embed asynchronously to avoid sync/async event loop conflicts
+        embeddings = await self._embedding_fn.embed_documents(documents)
+
         collection.add(
             documents=documents,
             metadatas=metadatas,  # type: ignore[arg-type]
             ids=ids,
+            embeddings=embeddings,  # type: ignore[arg-type]
         )
         logger.info(
             "Added %d documents to collection '%s'", len(documents), collection_name

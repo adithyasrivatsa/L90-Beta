@@ -1,0 +1,48 @@
+﻿pip : WARNING: 
+Ignoring invalid 
+distribution ~umpy (C
+:\Users\ME\AppData\Lo
+cal\Programs\Python\P
+ython312\Lib\site-pac
+kages)
+At line:1 char:1
++ pip show 
+google-genai 
+google-generativeai 
+2>&1 | Out-File 
+-FilePath p ...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (WARNING   
+ : Ignori...\site    
+-packages):Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+Name: google-genai
+Version: 1.63.0
+Summary: GenAI Python SDK
+Home-page: https://github.com/googleapis/python-genai
+Author: 
+Author-email: Google LLC <googleapis-packages@google.com>
+License-Expression: Apache-2.0
+Location: C:\Users\ME\AppData\Local\Programs\Python\Python312\Lib\site-packages
+Requires: anyio, distro, google-auth, httpx, pydantic, requests, sniffio, tenacity, typing-extensions, websockets
+Required-by: l90, langchain-google-genai
+---
+Name: google-generativeai
+Version: 0.8.6
+Summary: Google Generative AI High level API client library and tools.
+Home-page: https://github.com/google/generative-ai-python
+Author: Google LLC
+Author-email: googleapis-packages@google.com
+License: Apache 2.0
+Location: C:\Users\ME\AppData\Local\Programs\Python\Python312\Lib\site-packages
+Requires: google-ai-generativelanguage, google-api-core, google-api-python-client, google-auth, protobuf, pydantic, tqdm, typing-extensions
+Required-by: 

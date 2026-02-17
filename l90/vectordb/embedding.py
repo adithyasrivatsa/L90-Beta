@@ -75,14 +75,24 @@ class GeminiEmbeddingProvider(EmbeddingProvider, EmbeddingFunction):  # type: ig
 
     # ── ChromaDB EmbeddingFunction protocol (sync) ─────────────
 
-    def __call__(self, input: Documents) -> Embeddings:
-        """Synchronous embedding for ChromaDB collection usage."""
-        loop = asyncio.new_event_loop()
-        try:
-            embeddings = loop.run_until_complete(self.embed_documents(list(input)))
-            return cast(Embeddings, embeddings)
-        finally:
-            loop.close()
+    def __call__(self, input: Documents, *args: Any, **kwargs: Any) -> Embeddings:
+        """Synchronous embedding for ChromaDB collection usage.
+
+        Uses a separate thread to avoid conflicts with uvicorn's event loop.
+        """
+        import concurrent.futures
+
+        def _run() -> list[list[float]]:
+            loop = asyncio.new_event_loop()
+            try:
+                return loop.run_until_complete(self.embed_documents(list(input)))
+            finally:
+                loop.close()
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            embeddings = pool.submit(_run).result()
+
+        return cast(Embeddings, embeddings)
 
     # ── Internal helpers ───────────────────────────────────────
 

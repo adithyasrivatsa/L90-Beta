@@ -1,0 +1,41 @@
+﻿python : Failed to 
+send telemetry event 
+ClientStartEvent: 
+capture() takes 1 
+positional argument 
+but 3 were given
+At line:1 char:1
++ python -c "
++ ~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (Failed    
+ to send ...ut 3     
+were given:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+Failed to send 
+telemetry event Clien
+tCreateCollectionEven
+t: capture() takes 1 
+positional argument 
+but 3 were given
+Failed to send 
+telemetry event Clien
+tCreateCollectionEven
+t: capture() takes 1 
+positional argument 
+but 3 were given
+Failed to send 
+telemetry event 
+CollectionAddEvent: 
+capture() takes 1 
+positional argument 
+but 3 were given
+Collection created OK: Collection(name=test_collection)
+Count: 0
+add_documents OK

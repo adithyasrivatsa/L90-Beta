@@ -1,0 +1,2 @@
+﻿SUCCESS! Got 1 embeddings
+Dim: 3072

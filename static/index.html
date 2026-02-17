@@ -1,0 +1,1862 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>L90</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        :root {
+            --bk: #000;
+            --wt: #fff;
+            --g50: #fafafa;
+            --g100: #f5f5f5;
+            --g150: #ededed;
+            --g200: #e5e5e5;
+            --g300: #d4d4d4;
+            --g400: #a3a3a3;
+            --g500: #737373;
+            --g600: #525252;
+            --g700: #404040;
+            --g800: #262626;
+            --g900: #171717;
+            --grn: #22c55e;
+            --grn-bg: #f0fdf4;
+            --red: #ef4444;
+            --red-bg: #fef2f2;
+            --fn: 'Inter', -apple-system, sans-serif;
+            --mn: 'JetBrains Mono', monospace
+        }
+
+        html {
+            font-size: 16px
+        }
+
+        body {
+            font-family: var(--fn);
+            background: var(--wt);
+            color: var(--bk);
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh
+        }
+
+        /* ── Layout ─── */
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            height: 50px;
+            border-bottom: 1px solid var(--g150);
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, .9);
+            backdrop-filter: blur(14px);
+            z-index: 100
+        }
+
+        .nl {
+            display: flex;
+            align-items: center;
+            gap: 36px
+        }
+
+        .logo {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: -.6px
+        }
+
+        .nlinks {
+            display: flex;
+            gap: 3px;
+            list-style: none
+        }
+
+        .nlinks a {
+            font-size: .78rem;
+            font-weight: 500;
+            color: var(--g400);
+            text-decoration: none;
+            cursor: pointer;
+            padding: 5px 12px;
+            border-radius: 7px;
+            transition: .15s
+        }
+
+        .nlinks a:hover {
+            color: var(--g700);
+            background: var(--g50)
+        }
+
+        .nlinks a.on {
+            color: var(--bk);
+            background: var(--g100)
+        }
+
+        .nr {
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--grn)
+        }
+
+        .slbl {
+            font-size: .7rem;
+            color: var(--g400)
+        }
+
+        .ubtn {
+            font-size: .75rem;
+            font-weight: 500;
+            color: var(--g500);
+            cursor: pointer;
+            background: 0;
+            border: 1px solid var(--g200);
+            padding: 4px 12px;
+            border-radius: 6px
+        }
+
+        .ubtn:hover {
+            border-color: var(--g400);
+            color: var(--bk)
+        }
+
+        .page {
+            display: none
+        }
+
+        .page.on {
+            display: block
+        }
+
+        .hero {
+            padding: 64px 40px 52px;
+            max-width: 800px;
+            margin: 0 auto
+        }
+
+        .hero h1 {
+            font-size: 2.6rem;
+            font-weight: 800;
+            letter-spacing: -1.8px;
+            line-height: 1.05
+        }
+
+        .hero p {
+            font-size: .95rem;
+            color: var(--g500);
+            margin-top: 8px;
+            line-height: 1.5
+        }
+
+        .hero-dark {
+            background: var(--g900);
+            color: var(--wt);
+            padding: 64px 40px 52px
+        }
+
+        .hero-dark .hero {
+            padding: 0
+        }
+
+        .hero-dark p {
+            color: var(--g400)
+        }
+
+        .hero-light {
+            background: var(--g50);
+            border-bottom: 1px solid var(--g150);
+            padding: 56px 40px 48px
+        }
+
+        .hero-light .hero {
+            padding: 0
+        }
+
+        .sec {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 24px
+        }
+
+        .lbl {
+            font-size: .65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--g400);
+            margin-bottom: 16px
+        }
+
+        /* ── Form ─── */
+        textarea {
+            width: 100%;
+            min-height: 110px;
+            padding: 16px;
+            font-family: var(--fn);
+            font-size: .95rem;
+            line-height: 1.6;
+            border: 1px solid var(--g200);
+            border-radius: 12px;
+            outline: 0;
+            resize: vertical;
+            background: var(--g50);
+            color: var(--bk);
+            transition: .15s
+        }
+
+        textarea:focus {
+            border-color: var(--g400);
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, .03);
+            background: var(--wt)
+        }
+
+        textarea::placeholder {
+            color: var(--g400)
+        }
+
+        input[type=text],
+        input[type=password] {
+            width: 100%;
+            padding: 12px 16px;
+            font-family: var(--fn);
+            font-size: .9rem;
+            border: 1px solid var(--g200);
+            border-radius: 10px;
+            outline: 0;
+            background: var(--g50);
+            transition: .15s
+        }
+
+        input:focus {
+            border-color: var(--g400);
+            background: var(--wt)
+        }
+
+        select {
+            padding: 8px 12px;
+            font-family: var(--fn);
+            font-size: .8rem;
+            border: 1px solid var(--g200);
+            border-radius: 8px;
+            background: var(--wt);
+            outline: 0
+        }
+
+        .chips {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 8px
+        }
+
+        .chip {
+            padding: 7px 16px;
+            font-size: .76rem;
+            font-weight: 500;
+            font-family: var(--fn);
+            color: var(--g600);
+            background: var(--wt);
+            border: 1px solid var(--g200);
+            border-radius: 99px;
+            cursor: pointer;
+            transition: .12s
+        }
+
+        .chip:hover {
+            border-color: var(--g400)
+        }
+
+        .chip.on {
+            background: var(--bk);
+            color: var(--wt);
+            border-color: var(--bk)
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 28px;
+            font-size: .82rem;
+            font-weight: 600;
+            font-family: var(--fn);
+            border: none;
+            border-radius: 99px;
+            cursor: pointer;
+            transition: .12s
+        }
+
+        .btn-b {
+            background: var(--bk);
+            color: var(--wt)
+        }
+
+        .btn-b:hover {
+            background: var(--g800);
+            transform: scale(1.02)
+        }
+
+        .btn-b:disabled {
+            background: var(--g300);
+            cursor: default;
+            transform: none
+        }
+
+        .btn-o {
+            background: 0;
+            color: var(--g500);
+            border: 1px solid var(--g200)
+        }
+
+        .btn-o:hover {
+            border-color: var(--g400);
+            color: var(--bk)
+        }
+
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: .72rem
+        }
+
+        .btn-r {
+            background: var(--red);
+            color: var(--wt)
+        }
+
+        .btn-r:hover {
+            opacity: .85
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 20px
+        }
+
+        .row-l {
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .hint {
+            font-size: .7rem;
+            color: var(--g400)
+        }
+
+        .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, .25);
+            border-top-color: var(--wt);
+            border-radius: 50%;
+            animation: sp .5s linear infinite
+        }
+
+        @keyframes sp {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        /* ── Card ─── */
+        .card {
+            background: var(--wt);
+            border: 1px solid var(--g150);
+            border-radius: 14px;
+            overflow: hidden
+        }
+
+        .card+.card {
+            margin-top: 12px
+        }
+
+        .cp {
+            padding: 24px
+        }
+
+        /* ── Login ─── */
+        #login-page {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: var(--g900)
+        }
+
+        #login-page.hidden {
+            display: none !important
+        }
+
+        .login-box {
+            background: var(--wt);
+            border-radius: 20px;
+            padding: 48px 40px;
+            width: 380px;
+            text-align: center
+        }
+
+        .login-box h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 4px
+        }
+
+        .login-box p {
+            font-size: .82rem;
+            color: var(--g500);
+            margin-bottom: 28px
+        }
+
+        .login-box input {
+            margin-bottom: 12px
+        }
+
+        .login-box .btn {
+            width: 100%;
+            justify-content: center;
+            margin-top: 8px
+        }
+
+        .login-err {
+            font-size: .75rem;
+            color: var(--red);
+            margin-top: 8px;
+            min-height: 18px
+        }
+
+        /* ── Pipeline ─── */
+        .pipe {
+            display: none;
+            background: var(--g50);
+            border: 1px solid var(--g150);
+            border-radius: 12px;
+            padding: 16px 24px;
+            margin-top: 16px
+        }
+
+        .pipe.vis {
+            display: block
+        }
+
+        .pipe-row {
+            display: flex;
+            align-items: center
+        }
+
+        .ps {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px
+        }
+
+        .pd {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1.5px solid var(--g200);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .6rem;
+            font-weight: 700;
+            color: var(--g400);
+            background: var(--wt);
+            transition: .3s
+        }
+
+        .pd.act {
+            border-color: var(--bk);
+            color: var(--bk);
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, .05)
+        }
+
+        .pd.dn {
+            border-color: var(--bk);
+            background: var(--bk);
+            color: var(--wt)
+        }
+
+        .pn {
+            font-size: .58rem;
+            font-weight: 500;
+            color: var(--g400);
+            text-transform: uppercase;
+            letter-spacing: .3px
+        }
+
+        .pl {
+            flex: .4;
+            height: 1.5px;
+            background: var(--g200);
+            margin-bottom: 20px;
+            transition: .3s
+        }
+
+        .pl.dn {
+            background: var(--bk)
+        }
+
+        /* ── Answer ─── */
+        .ans-card {
+            display: none;
+            margin-top: 16px
+        }
+
+        .ans-card.vis {
+            display: block
+        }
+
+        .ans-hd {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            background: var(--g50);
+            border-bottom: 1px solid var(--g150)
+        }
+
+        .ans-lbl {
+            font-size: .65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: var(--g400)
+        }
+
+        .vtag {
+            font-size: .68rem;
+            font-weight: 600;
+            padding: 3px 12px;
+            border-radius: 99px;
+            letter-spacing: .2px
+        }
+
+        .v-ok {
+            background: var(--grn-bg);
+            color: #15803d
+        }
+
+        .v-no {
+            background: var(--red-bg);
+            color: #dc2626
+        }
+
+        .ans-body {
+            padding: 28px 24px;
+            position: relative
+        }
+
+        .ans-txt {
+            font-size: .95rem;
+            line-height: 1.8;
+            color: var(--g800)
+        }
+
+        .save-btn {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--red);
+            border: none;
+            cursor: pointer;
+            opacity: .7;
+            transition: .15s
+        }
+
+        .save-btn:hover {
+            opacity: 1;
+            transform: scale(1.3)
+        }
+
+        .save-menu {
+            display: none;
+            position: absolute;
+            bottom: 28px;
+            left: 8px;
+            background: var(--wt);
+            border: 1px solid var(--g200);
+            border-radius: 10px;
+            padding: 6px 0;
+            min-width: 160px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .08);
+            z-index: 10
+        }
+
+        .save-menu.vis {
+            display: block
+        }
+
+        .save-menu a {
+            display: block;
+            padding: 6px 14px;
+            font-size: .75rem;
+            color: var(--g700);
+            text-decoration: none;
+            cursor: pointer
+        }
+
+        .save-menu a:hover {
+            background: var(--g50)
+        }
+
+        .ans-ft {
+            display: flex;
+            gap: 20px;
+            padding: 12px 24px;
+            border-top: 1px solid var(--g100);
+            background: var(--g50)
+        }
+
+        .af {
+            font-size: .7rem;
+            color: var(--g500)
+        }
+
+        .af strong {
+            color: var(--bk);
+            font-weight: 600;
+            font-family: var(--mn);
+            font-size: .68rem
+        }
+
+        /* ── Special Blocks ─── */
+        .spec-blk {
+            margin-top: 16px;
+            border: 1px solid var(--g200);
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: .85rem
+        }
+
+        .spec-hd {
+            background: var(--g50);
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: .75rem;
+            color: var(--g600);
+            border-bottom: 1px solid var(--g200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none
+        }
+
+        .spec-hd:hover {
+            background: var(--g100)
+        }
+
+        .spec-bd {
+            padding: 12px 16px;
+            background: var(--wt);
+            display: none
+        }
+
+        .spec-bd.vis {
+            display: block
+        }
+
+        .code-res {
+            font-family: var(--mn);
+            font-size: .8rem;
+            white-space: pre-wrap;
+            color: var(--g700);
+            background: var(--g50);
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 8px
+        }
+
+        .succ-tag {
+            font-size: .65rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: var(--grn-bg);
+            color: #15803d;
+            font-weight: 600
+        }
+
+        .fail-tag {
+            font-size: .65rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: var(--red-bg);
+            color: #dc2626;
+            font-weight: 600
+        }
+
+        /* ── Upload ─── */
+        .ucard {
+            border: 1.5px dashed var(--g200);
+            border-radius: 14px;
+            padding: 44px 28px;
+            text-align: center;
+            cursor: pointer;
+            transition: .15s;
+            background: var(--g50)
+        }
+
+        .ucard:hover {
+            border-color: var(--g400);
+            background: var(--wt)
+        }
+
+        .ucard.drag {
+            border-color: var(--bk);
+            background: var(--wt)
+        }
+
+        .ucard-ic {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 12px;
+            border-radius: 10px;
+            background: var(--g100);
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .ucard-ic svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--g500);
+            fill: none;
+            stroke-width: 1.5
+        }
+
+        .ucard-t {
+            font-size: .85rem;
+            font-weight: 600;
+            color: var(--g800)
+        }
+
+        .ucard-s {
+            font-size: .74rem;
+            color: var(--g400);
+            margin-top: 3px
+        }
+
+        .fmts {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 12px
+        }
+
+        .fmt {
+            font-size: .62rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 5px;
+            background: var(--g100);
+            color: var(--g500);
+            text-transform: uppercase
+        }
+
+        #fi {
+            display: none
+        }
+
+        .pbar {
+            height: 2px;
+            background: var(--g100);
+            border-radius: 1px;
+            margin-top: 12px;
+            overflow: hidden;
+            display: none
+        }
+
+        .pbar.sh {
+            display: block
+        }
+
+        .pfill {
+            height: 100%;
+            background: var(--bk);
+            width: 0%;
+            transition: width .3s
+        }
+
+        .p-status {
+            font-size: .75rem;
+            color: var(--g500);
+            margin-top: 6px;
+            text-align: center;
+            font-weight: 500;
+            min-height: 16px
+        }
+
+        /* ── Table ─── */
+        .ftbl {
+            margin-top: 24px
+        }
+
+        .fth {
+            display: grid;
+            grid-template-columns: 1fr 120px 80px;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--g200)
+        }
+
+        .fth span {
+            font-size: .62rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            color: var(--g400)
+        }
+
+        .ftr {
+            display: grid;
+            grid-template-columns: 1fr 120px 80px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--g100);
+            align-items: center
+        }
+
+        .ftr-n {
+            font-size: .82rem;
+            font-weight: 500
+        }
+
+        .ftr-c,
+        .ftr-k {
+            font-size: .75rem;
+            color: var(--g500);
+            font-family: var(--mn)
+        }
+
+        .empty {
+            text-align: center;
+            padding: 44px 0;
+            color: var(--g400);
+            font-size: .82rem
+        }
+
+        /* ── Notebook ─── */
+        .nb-grid {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 0;
+            min-height: calc(100vh - 50px)
+        }
+
+        .nb-side {
+            border-right: 1px solid var(--g150);
+            padding: 20px;
+            overflow-y: auto
+        }
+
+        .nb-main {
+            padding: 32px 40px;
+            overflow-y: auto
+        }
+
+        .nb-item {
+            padding: 10px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: .12s;
+            margin-bottom: 2px
+        }
+
+        .nb-item:hover {
+            background: var(--g50)
+        }
+
+        .nb-item.on {
+            background: var(--g100)
+        }
+
+        .nb-item-t {
+            font-size: .82rem;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .nb-item-d {
+            font-size: .65rem;
+            color: var(--g400);
+            margin-top: 1px
+        }
+
+        .nb-editor {
+            width: 100%;
+            min-height: 400px;
+            padding: 20px;
+            font-family: var(--fn);
+            font-size: .9rem;
+            line-height: 1.7;
+            border: 1px solid var(--g200);
+            border-radius: 12px;
+            outline: 0;
+            resize: vertical;
+            background: var(--g50)
+        }
+
+        .nb-editor:focus {
+            border-color: var(--g400);
+            background: var(--wt)
+        }
+
+        .nb-title-input {
+            font-size: 1.4rem;
+            font-weight: 700;
+            border: none;
+            outline: 0;
+            background: 0;
+            width: 100%;
+            margin-bottom: 12px;
+            letter-spacing: -.5px
+        }
+
+        .nb-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px
+        }
+
+        /* ── Workspace ─── */
+        .ws-grid {
+            display: grid;
+            grid-template-columns: 220px 1fr 240px;
+            gap: 0;
+            min-height: calc(100vh - 50px)
+        }
+
+        .ws-side {
+            border-right: 1px solid var(--g150);
+            padding: 16px;
+            overflow-y: auto
+        }
+
+        .ws-main {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden
+        }
+
+        .ws-right {
+            border-left: 1px solid var(--g150);
+            padding: 16px;
+            overflow-y: auto;
+            font-size: .8rem
+        }
+
+        .ws-item {
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: .12s;
+            margin-bottom: 2px
+        }
+
+        .ws-item:hover {
+            background: var(--g50)
+        }
+
+        .ws-item.on {
+            background: var(--g100)
+        }
+
+        .ws-item-t {
+            font-size: .8rem;
+            font-weight: 500
+        }
+
+        .ws-chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px
+        }
+
+        .ws-chat-input {
+            padding: 16px;
+            border-top: 1px solid var(--g150);
+            display: flex;
+            gap: 8px
+        }
+
+        .ws-chat-input input {
+            flex: 1
+        }
+
+        .ws-msg {
+            margin-bottom: 12px
+        }
+
+        .ws-msg-u {
+            font-size: .68rem;
+            font-weight: 600;
+            color: var(--g500);
+            margin-bottom: 2px
+        }
+
+        .ws-msg-t {
+            font-size: .85rem;
+            line-height: 1.5;
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: var(--g50);
+            position: relative
+        }
+
+        .ws-msg-t.ast {
+            background: var(--g100)
+        }
+
+        .ws-msg-t .save-btn {
+            bottom: 4px;
+            left: 4px
+        }
+
+        .member-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--g100);
+            font-size: .78rem
+        }
+
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: .78rem
+        }
+
+        .toggle {
+            width: 36px;
+            height: 20px;
+            border-radius: 10px;
+            background: var(--g200);
+            position: relative;
+            cursor: pointer;
+            transition: .2s
+        }
+
+        .toggle.on {
+            background: var(--bk)
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--wt);
+            transition: .2s
+        }
+
+        .toggle.on::after {
+            left: 18px
+        }
+
+        /* ── Grounding ─── */
+        .gg {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            border: 1px solid var(--g150);
+            border-radius: 14px;
+            overflow: hidden
+        }
+
+        .gc {
+            padding: 20px;
+            text-align: center;
+            border-right: 1px solid var(--g150)
+        }
+
+        .gc:last-child {
+            border-right: 0
+        }
+
+        .gv {
+            font-size: 1.4rem;
+            font-weight: 800;
+            font-family: var(--mn);
+            letter-spacing: -.8px
+        }
+
+        .gl {
+            font-size: .6rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            color: var(--g400);
+            margin-top: 3px
+        }
+
+        /* ── Contact ── */
+        .contact-card {
+            max-width: 480px;
+            margin: 60px auto;
+            text-align: center;
+            padding: 48px 32px
+        }
+
+        .contact-card h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -.5px;
+            margin-bottom: 8px
+        }
+
+        .contact-card p {
+            font-size: .85rem;
+            color: var(--g500);
+            margin-bottom: 20px;
+            line-height: 1.5
+        }
+
+        .contact-card a {
+            color: var(--bk);
+            font-weight: 600;
+            text-decoration: underline
+        }
+
+        /* ── Modal ── */
+        .modal-bg {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .4);
+            z-index: 200;
+            align-items: center;
+            justify-content: center
+        }
+
+        .modal-bg.vis {
+            display: flex
+        }
+
+        .modal {
+            background: var(--wt);
+            border-radius: 16px;
+            padding: 32px;
+            width: 400px;
+            max-width: 90vw
+        }
+
+        .modal h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 16px
+        }
+
+        .modal input,
+        .modal select {
+            margin-bottom: 10px
+        }
+
+        .modal .btn {
+            margin-top: 8px
+        }
+
+        /* ── Toast ─── */
+        .toast-dock {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px
+        }
+
+        .toast {
+            padding: 8px 20px;
+            background: var(--g900);
+            color: var(--wt);
+            font-size: .78rem;
+            font-weight: 500;
+            border-radius: 99px;
+            animation: ti .3s;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .1)
+        }
+
+        @keyframes ti {
+            from {
+                opacity: 0;
+                transform: translateY(6px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ═══ LOGIN ═══ -->
+    <div id="login-page" class="on">
+        <div class="login-box">
+            <h1>L90</h1>
+            <p>Closed-World Agentic RAG System</p>
+            <input type="text" id="l-user" placeholder="Username">
+            <input type="password" id="l-pass" placeholder="Password">
+            <button class="btn btn-b" onclick="doLogin()">Sign In</button>
+            <div class="login-err" id="l-err"></div>
+            <div style="margin-top:20px;font-size:.72rem;color:var(--g400)">
+                Need help? <a href="mailto:adithyadrdo@gmail.com" style="color:var(--bk)">Contact Admin</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ APP SHELL ═══ -->
+    <div id="app-shell" style="display:none">
+        <nav>
+            <div class="nl">
+                <div class="logo">L90</div>
+                <div class="nlinks" id="nav-links">
+                    <a class="on" data-p="query">Query</a>
+                    <a data-p="documents">Documents</a>
+                    <a data-p="notebooks">Notebooks</a>
+                    <a data-p="workspace">Workspace</a>
+                    <a data-p="admin" id="nav-admin" style="display:none">Admin</a>
+                    <a data-p="contact">Contact</a>
+                </div>
+            </div>
+            <div class="nr">
+                <div class="dot"></div>
+                <span class="slbl" id="user-label"></span>
+                <button class="ubtn" onclick="doLogout()">Logout</button>
+            </div>
+        </nav>
+
+        <!-- ═══ QUERY ═══ -->
+        <div class="page on" id="pg-query">
+            <div class="hero-dark">
+                <div class="hero">
+                    <h1>Ask anything.</h1>
+                    <p>Every answer grounded in your documents. Every claim verified.</p>
+                </div>
+            </div>
+            <div class="sec">
+                <div class="lbl">Question</div>
+                <textarea id="q-in" placeholder="What would you like to know?"></textarea>
+                <div class="row" style="margin-top:14px">
+                    <div class="lbl" style="margin:0">Mode</div>
+                </div>
+                <div class="chips" id="mode-g">
+                    <button class="chip on" data-m="STRICT">Strict</button>
+                    <button class="chip" data-m="PARTIAL">Partial</button>
+                    <button class="chip" data-m="GENERAL">General</button>
+                    <button class="chip" data-m="INCOGNITO">Incognito</button>
+                    <button class="chip" data-m="WORKSPACE">Workspace</button>
+                </div>
+                <div class="row"><span class="hint">Ctrl+Enter</span><button class="btn btn-b" id="run-btn"
+                        onclick="runQ()"><span id="run-t">Run Pipeline</span></button></div>
+                <div class="pipe" id="pipe">
+                    <div class="pipe-row">
+                        <div class="ps">
+                            <div class="pd" data-s="0">1</div><span class="pn">Plan</span>
+                        </div>
+                        <div class="pl" data-l="0"></div>
+                        <div class="ps">
+                            <div class="pd" data-s="1">2</div><span class="pn">Retrieve</span>
+                        </div>
+                        <div class="pl" data-l="1"></div>
+                        <div class="ps">
+                            <div class="pd" data-s="2">3</div><span class="pn">Analyze</span>
+                        </div>
+                        <div class="pl" data-l="2"></div>
+                        <div class="ps">
+                            <div class="pd" data-s="3">4</div><span class="pn">Verify</span>
+                        </div>
+                        <div class="pl" data-l="3"></div>
+                        <div class="ps">
+                            <div class="pd" data-s="4">5</div><span class="pn">Correct</span>
+                        </div>
+                        <div class="pl" data-l="4"></div>
+                        <div class="ps">
+                            <div class="pd" data-s="5">6</div><span class="pn">Generate</span>
+                        </div>
+                        <div class="pl" data-l="5"></div>
+                        <div class="ps">
+                            <div class="pd" data-s="6">7</div><span class="pn">Ground</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="ans-card card" id="ans-card">
+                    <div class="ans-hd"><span class="ans-lbl">Answer</span><span class="vtag" id="vtag"></span></div>
+                    <div class="ans-body">
+                        <div class="ans-txt" id="ans-txt"></div>
+                        <button class="save-btn" id="save-btn" title="Save to Notebook"
+                            onclick="toggleSaveMenu()"></button>
+                        <div class="save-menu" id="save-menu"></div>
+                    </div>
+                    <div class="ans-ft" id="ans-ft"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ DOCUMENTS ═══ -->
+        <div class="page" id="pg-documents">
+            <div class="hero-light">
+                <div class="hero">
+                    <h1>Documents</h1>
+                    <p>Upload files to build your knowledge base.</p>
+                </div>
+            </div>
+            <div class="sec">
+                <div class="lbl">Upload</div>
+                <div class="ucard" id="uc">
+                    <div class="ucard-ic"><svg viewBox="0 0 24 24">
+                            <path d="M12 5v14M5 12l7-7 7 7" />
+                        </svg></div>
+                    <div class="ucard-t">Drop files here or click</div>
+                    <div class="ucard-s">Files are chunked, embedded, and indexed</div>
+                    <div class="fmts"><span class="fmt">pdf</span><span class="fmt">txt</span><span
+                            class="fmt">md</span><span class="fmt">docx</span></div>
+                    <input type="file" id="fi" accept=".pdf,.txt,.md,.docx" multiple>
+                </div>
+                <div class="pbar" id="pbar">
+                    <div class="pfill" id="pfill"></div>
+                </div>
+                <div class="p-status" id="pstatus"></div>
+                <div class="ftbl" id="ftbl" style="display:none">
+                    <div class="fth"><span>Name</span><span>Collection</span><span
+                            style="text-align:right">Chunks</span></div>
+                    <div id="frows"></div>
+                </div>
+                <div class="empty" id="no-f">No documents uploaded yet</div>
+            </div>
+        </div>
+
+        <!-- ═══ NOTEBOOKS ═══ -->
+        <div class="page" id="pg-notebooks">
+            <div class="nb-grid">
+                <div class="nb-side">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                        <div class="lbl" style="margin:0">Notebooks</div>
+                        <button class="btn btn-b btn-sm" onclick="newNb()">+ New</button>
+                    </div>
+                    <div id="nb-list"></div>
+                </div>
+                <div class="nb-main" id="nb-main">
+                    <div class="empty">Select or create a notebook</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ WORKSPACE ═══ -->
+        <div class="page" id="pg-workspace">
+            <div class="ws-grid">
+                <div class="ws-side">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                        <div class="lbl" style="margin:0">Workspaces</div>
+                        <button class="btn btn-b btn-sm" onclick="newWs()">+ New</button>
+                    </div>
+                    <div id="ws-list"></div>
+                </div>
+                <div class="ws-main" id="ws-main">
+                    <div class="empty" style="margin:auto">Select or create a workspace</div>
+                </div>
+                <div class="ws-right" id="ws-right" style="display:none">
+                    <div class="lbl">Members</div>
+                    <div id="ws-members"></div>
+                    <button class="btn btn-o btn-sm" style="margin-top:8px;width:100%" onclick="openAddMember()">+ Add
+                        Member</button>
+                    <div style="margin-top:20px">
+                        <div class="lbl">Docs</div>
+                    </div>
+                    <div id="ws-docs"></div>
+                    <div style="margin-top:20px">
+                        <div class="lbl">Shared Notebooks</div>
+                    </div>
+                    <div id="ws-nbs"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ ADMIN ═══ -->
+        <div class="page" id="pg-admin">
+            <div class="hero-dark">
+                <div class="hero">
+                    <h1>Admin Panel</h1>
+                    <p>Upload documents to the Approved Library.</p>
+                </div>
+            </div>
+            <div class="sec">
+                <div class="lbl">Approved Library Upload</div>
+                <div class="ucard" id="auc">
+                    <div class="ucard-ic"><svg viewBox="0 0 24 24">
+                            <path d="M12 5v14M5 12l7-7 7 7" />
+                        </svg></div>
+                    <div class="ucard-t">Upload to Approved Library</div>
+                    <div class="ucard-s">Admin-only. Documents available to all users.</div>
+                    <div class="fmts"><span class="fmt">pdf</span><span class="fmt">txt</span><span
+                            class="fmt">md</span><span class="fmt">docx</span></div>
+                    <input type="file" id="afi" accept=".pdf,.txt,.md,.docx" multiple>
+                </div>
+                <div class="pbar" id="apbar">
+                    <div class="pfill" id="apfill"></div>
+                </div>
+                <div class="p-status" id="apstatus"></div>
+                <div class="ftbl" id="aftbl" style="display:none">
+                    <div class="fth"><span>Name</span><span>Status</span><span style="text-align:right">Chunks</span>
+                    </div>
+                    <div id="afrows"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ CONTACT ═══ -->
+        <div class="page" id="pg-contact">
+            <div class="contact-card card">
+                <h2>Contact Admin</h2>
+                <p>If you encounter any issues, need account support, or have feature requests, reach out to the
+                    administrator.</p>
+                <a href="mailto:adithyadrdo@gmail.com">adithyadrdo@gmail.com</a>
+                <p style="margin-top:20px;font-size:.75rem;color:var(--g400)">Response time: within 24 hours</p>
+            </div>
+        </div>
+
+    </div><!-- end app-shell -->
+
+    <!-- ═══ MODALS ═══ -->
+    <div class="modal-bg" id="m-member">
+        <div class="modal">
+            <h3>Add Member</h3>
+            <input type="text" id="mm-user" placeholder="Username (e.g. user1)">
+            <select id="mm-perm">
+                <option value="read">Read</option>
+                <option value="write">Write</option>
+                <option value="append">Append</option>
+            </select>
+            <div style="display:flex;gap:8px"><button class="btn btn-b" onclick="doAddMember()">Add</button><button
+                    class="btn btn-o" onclick="closeModal('m-member')">Cancel</button></div>
+        </div>
+    </div>
+    <div class="modal-bg" id="m-share-nb">
+        <div class="modal">
+            <h3>Share Notebook to Workspace</h3>
+            <select id="ms-ws" style="width:100%"></select>
+            <select id="ms-perm">
+                <option value="read">Read</option>
+                <option value="write">Write</option>
+                <option value="append">Append</option>
+            </select>
+            <div style="display:flex;gap:8px"><button class="btn btn-b" onclick="doShareNb()">Share</button><button
+                    class="btn btn-o" onclick="closeModal('m-share-nb')">Cancel</button></div>
+        </div>
+    </div>
+
+    <div class="toast-dock" id="toasts"></div>
+
+    <script>
+        const API = location.origin;
+        let token = '', user = null, mode = 'STRICT', busy = false;
+        let curNb = null, curWs = null, notebooks = [], workspaces = [];
+
+        /* ── Auth ───── */
+        async function doLogin() {
+            const u = document.getElementById('l-user').value.trim(), p = document.getElementById('l-pass').value;
+            if (!u || !p) return;
+            try {
+                const r = await api('/login', 'POST', { username: u, password: p }, true);
+                token = r.token; user = r.user; localStorage.setItem('l90_token', token); localStorage.setItem('l90_user', JSON.stringify(user));
+                enterApp();
+            } catch (e) { document.getElementById('l-err').textContent = e.message }
+        }
+        function enterApp() {
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('app-shell').style.display = '';
+            document.getElementById('user-label').textContent = user.username + (user.role === 'admin' ? ' (Admin)' : '');
+            if (user.role === 'admin') document.getElementById('nav-admin').style.display = '';
+            loadNbs(); loadWss();
+        }
+        function doLogout() { localStorage.removeItem('l90_token'); localStorage.removeItem('l90_user'); location.reload() }
+        (function () {
+            const t = localStorage.getItem('l90_token'), u2 = localStorage.getItem('l90_user');
+            if (t && u2) { token = t; user = JSON.parse(u2); enterApp() }
+        })();
+
+        /* ── API helper ── */
+        async function api(path, method = 'GET', body = null, noAuth = false) {
+            const h = { 'Content-Type': 'application/json' };
+            if (!noAuth) h['X-Token'] = token;
+            const opts = { method, headers: h };
+            if (body) opts.body = JSON.stringify(body);
+            const r = await fetch(API + path, opts);
+            if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.detail || 'Error ' + r.status) }
+            return r.json();
+        }
+
+        /* ── Nav ───── */
+        document.querySelectorAll('.nlinks a').forEach(a => {
+            a.addEventListener('click', () => {
+                document.querySelectorAll('.nlinks a').forEach(l => l.classList.remove('on'));
+                a.classList.add('on');
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+                document.getElementById('pg-' + a.dataset.p).classList.add('on');
+                if (a.dataset.p === 'notebooks') loadNbs();
+                if (a.dataset.p === 'workspace') loadWss();
+            });
+        });
+
+        /* ── Mode chips ── */
+        document.getElementById('mode-g').addEventListener('click', e => {
+            const c = e.target.closest('.chip'); if (!c) return;
+            document.querySelectorAll('.chip').forEach(x => x.classList.remove('on'));
+            c.classList.add('on'); mode = c.dataset.m;
+        });
+
+        /* ── Pipeline ── */
+        function resetP() { document.querySelectorAll('.pd').forEach(d => d.classList.remove('act', 'dn')); document.querySelectorAll('.pl').forEach(l => l.classList.remove('dn')) }
+        function stepP(i) { for (let j = 0; j < i; j++) { document.querySelector(`[data-s="${j}"]`)?.classList.add('dn'); document.querySelector(`[data-s="${j}"]`)?.classList.remove('act'); document.querySelector(`[data-l="${j}"]`)?.classList.add('dn') } const el = document.querySelector(`[data-s="${i}"]`); if (el) { el.classList.add('act'); el.classList.remove('dn') } }
+        function doneP() { for (let i = 0; i < 7; i++) { document.querySelector(`[data-s="${i}"]`)?.classList.add('dn'); document.querySelector(`[data-s="${i}"]`)?.classList.remove('act'); if (i < 6) document.querySelector(`[data-l="${i}"]`)?.classList.add('dn') } }
+
+        /* ── Query ── */
+        document.getElementById('q-in').addEventListener('keydown', e => { if (e.ctrlKey && e.key === 'Enter') runQ() });
+
+        async function runQ() {
+            const q = document.getElementById('q-in').value.trim();
+            if (!q || busy) return;
+
+            busy = true;
+            const btn = document.getElementById('run-btn');
+            btn.disabled = true;
+            document.getElementById('run-t').innerHTML = '<div class="spinner"></div><span>Running...</span>';
+
+            // UI Reset
+            resetP();
+            document.getElementById('pipe').classList.add('vis');
+            document.getElementById('ans-card').classList.remove('vis');
+
+            // Pipeline animation
+            let s = 0;
+            const iv = setInterval(() => { if (s < 7) stepP(s++) }, 1300);
+
+            try {
+                const d = await api('/query', 'POST', {
+                    query: q,
+                    mode: mode,
+                    user_id: user.username,
+                    workspace_id: 'default_workspace'
+                });
+
+                clearInterval(iv);
+                doneP();
+                showAns(d);
+                toast('Query completed');
+            } catch (e) {
+                clearInterval(iv);
+                toast(e.message);
+            } finally {
+                busy = false;
+                btn.disabled = false;
+                document.getElementById('run-t').textContent = 'Run Pipeline';
+            }
+        }
+
+        function showAns(d) {
+            const card = document.getElementById('ans-card');
+            const txtDiv = document.getElementById('ans-txt');
+            const metaDiv = document.getElementById('ans-ft');
+            const tag = document.getElementById('vtag');
+
+            // 1. Render Verdict Tag
+            const ok = d.grounding_report?.final_verdict === 'APPROVED';
+            tag.textContent = ok ? 'Grounded' : 'Rejected';
+            tag.className = 'vtag ' + (ok ? 'v-ok' : 'v-no');
+
+            // 2. Format Answer Text
+            let html = d.answer
+                .replace(/\n\n/g, '<br><br>')
+                .replace(/\n/g, '<br>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\[Source: (.*?)\]/g, '<span class="src-ref" style="font-size:.7rem;color:var(--g500);background:var(--g100);padding:2px 6px;border-radius:4px;margin:0 2px">$1</span>');
+
+            // 3. Append Code Verification Block
+            if (d.code_verification && d.code_verification.code) {
+                const cv = d.code_verification;
+                const statusTag = cv.success
+                    ? '<span class="succ-tag">VERIFIED</span>'
+                    : '<span class="fail-tag">FAILED</span>';
+
+                html += `
+                    <div class="spec-blk">
+                        <div class="spec-hd" onclick="this.nextElementSibling.classList.toggle('vis')">
+                            <span>Python Code Verification</span>
+                            ${statusTag}
+                        </div>
+                        <div class="spec-bd">
+                            <div style="font-size:.75rem;color:var(--g500);margin-bottom:6px">Generated Proof Script:</div>
+                            <pre class="code-res">${cv.code}</pre>
+                            <div style="font-size:.75rem;color:var(--g500);margin:12px 0 6px">Execution Result:</div>
+                            <pre class="code-res" style="color:${cv.success ? 'var(--g700)' : 'var(--red)'}">${cv.result || cv.stderr || 'No output'}</pre>
+                        </div>
+                    </div>`;
+            }
+
+            // 4. Append Deep Reasoning Block
+            if (d.deep_reasoning && d.deep_reasoning.length > 0) {
+                const dr = d.deep_reasoning[0]; // Take the first synthesis
+                html += `
+                    <div class="spec-blk">
+                        <div class="spec-hd" onclick="this.nextElementSibling.classList.toggle('vis')">
+                            <span>Deep Reasoning Synthesis</span>
+                            <span style="font-size:.65rem;color:var(--g500)">Key Insight</span>
+                        </div>
+                        <div class="spec-bd">
+                            <div style="font-weight:600;margin-bottom:8px;color:var(--g800)">${dr.key_insight || 'Synthesis'}</div>
+                            <div style="font-size:.85rem;line-height:1.6;color:var(--g600)">${dr.derivation_path || 'Reasoning chain available.'}</div>
+                        </div>
+                    </div>`;
+            }
+
+            txtDiv.innerHTML = html;
+
+            // 5. Render Meta (Confidence, Mode)
+            const c = (d.confidence_score * 100).toFixed(0);
+            metaDiv.innerHTML = `
+                <div class="af">Confidence <strong>${c}%</strong></div>
+                <div class="af">Mode <strong>${d.mode}</strong></div>
+                <div class="af">Session <strong>${d.session_id.substring(0, 8)}</strong></div>
+            `;
+
+            window._lastAnswer = d.answer;
+            buildSaveMenu();
+            card.classList.add('vis');
+
+            // 6. Trigger KaTeX Rendering
+            if (window.renderMathInElement) {
+                renderMathInElement(txtDiv, {
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false },
+                        { left: '\\(', right: '\\)', display: false },
+                        { left: '\\[', right: '\\]', display: true }
+                    ],
+                    throwOnError: false
+                });
+            }
+        }
+
+        /* ── Save to notebook ── */
+        function toggleSaveMenu() { document.getElementById('save-menu').classList.toggle('vis') }
+        function buildSaveMenu() {
+            const m = document.getElementById('save-menu');
+            if (!notebooks.length) { m.innerHTML = '<a style="color:var(--g400)">No notebooks — create one first</a>'; return }
+            m.innerHTML = notebooks.map(n => `<a onclick="saveToNb(${n.id})">${n.title}</a>`).join('');
+        }
+        async function saveToNb(id) {
+            if (!window._lastAnswer) return;
+            try { await api(`/notebooks/${id}/append`, 'POST', { text: window._lastAnswer }); toast('Saved to notebook'); document.getElementById('save-menu').classList.remove('vis') }
+            catch (e) { toast(e.message) }
+        }
+        document.addEventListener('click', e => { if (!e.target.closest('.save-btn') && !e.target.closest('.save-menu')) document.getElementById('save-menu').classList.remove('vis') });
+
+        /* ── Upload ── */
+        const uc = document.getElementById('uc'), fi = document.getElementById('fi');
+        uc.addEventListener('click', () => fi.click());
+        uc.addEventListener('dragover', e => { e.preventDefault(); uc.classList.add('drag') });
+        uc.addEventListener('dragleave', () => uc.classList.remove('drag'));
+        uc.addEventListener('drop', e => { e.preventDefault(); uc.classList.remove('drag'); doFiles(e.dataTransfer.files) });
+        fi.addEventListener('change', e => { if (e.target.files.length) doFiles(e.target.files); fi.value = '' });
+        async function doFiles(files) { for (const f of files) await uploadOne(f) }
+        async function uploadOne(file) {
+            const bar = document.getElementById('pbar'), fill = document.getElementById('pfill'), stat = document.getElementById('pstatus');
+            bar.classList.add('sh'); fill.style.width = '40%'; stat.textContent = 'Uploading...';
+            const fd = new FormData(); fd.append('file', file); fd.append('collection', 'user_private_collection'); fd.append('owner', user.username);
+            try {
+                fill.style.width = '75%'; stat.textContent = 'Processing (Chunking & Embedding)... This may take a moment.';
+                const r = await fetch(API + '/upload', { method: 'POST', body: fd, headers: { 'X-Token': token } });
+                if (!r.ok) { const e = await r.json(); throw new Error(e.detail || 'Upload failed') }
+                const d = await r.json(); fill.style.width = '100%'; stat.textContent = 'Done!';
+                document.getElementById('no-f').style.display = 'none'; document.getElementById('ftbl').style.display = 'block';
+                document.getElementById('frows').innerHTML += `<div class="ftr"><span class="ftr-n">${file.name}</span><span class="ftr-c">${d.collection}</span><span class="ftr-k" style="text-align:right">${d.chunks_stored}</span></div>`;
+                toast(file.name + ' — ' + d.chunks_stored + ' chunks');
+                setTimeout(() => { bar.classList.remove('sh'); stat.textContent = '' }, 2000);
+            } catch (e) { toast(e.message); fill.style.width = '100%'; fill.style.background = 'var(--red)'; stat.textContent = 'Error: ' + e.message; setTimeout(() => { bar.classList.remove('sh'); fill.style.background = ''; fill.style.width = '0%'; stat.textContent = '' }, 3000) }
+        }
+
+        /* ── Admin Upload ── */
+        const auc = document.getElementById('auc'), afi = document.getElementById('afi');
+        if (auc) {
+            auc.addEventListener('click', () => afi.click());
+            uc.addEventListener('dragover', e => { e.preventDefault() });
+            afi.addEventListener('change', e => { if (e.target.files.length) doAdminFiles(e.target.files); afi.value = '' });
+        }
+        async function doAdminFiles(files) { for (const f of files) await adminUploadOne(f) }
+        async function adminUploadOne(file) {
+            const bar = document.getElementById('apbar'), fill = document.getElementById('apfill'), stat = document.getElementById('apstatus');
+            bar.classList.add('sh'); fill.style.width = '50%'; stat.textContent = 'Uploading...';
+            const fd = new FormData(); fd.append('file', file);
+            try {
+                fill.style.width = '80%'; stat.textContent = 'Processing (Chunking & Embedding)... This may take a moment.';
+                const r = await fetch(API + '/admin/upload', { method: 'POST', body: fd, headers: { 'X-Token': token } });
+                if (!r.ok) { const e = await r.json(); throw new Error(e.detail || 'Upload failed') }
+                const d = await r.json(); fill.style.width = '100%'; stat.textContent = 'Done!';
+                document.getElementById('aftbl').style.display = 'block';
+                document.getElementById('afrows').innerHTML += `<div class="ftr"><span class="ftr-n">${file.name}</span><span class="ftr-c">approved_library</span><span class="ftr-k" style="text-align:right">${d.chunks_stored}</span></div>`;
+                toast('Approved Library: ' + file.name);
+                setTimeout(() => { bar.classList.remove('sh'); stat.textContent = '' }, 2000);
+            } catch (e) { toast(e.message); fill.style.width = '100%'; fill.style.background = 'var(--red)'; stat.textContent = 'Error: ' + e.message; setTimeout(() => { bar.classList.remove('sh'); fill.style.background = ''; fill.style.width = '0%'; stat.textContent = '' }, 3000) }
+        }
+
+        /* ── Notebooks ── */
+        async function loadNbs() {
+            try { notebooks = await api('/notebooks'); renderNbList() } catch (e) { console.error(e) }
+        }
+        function renderNbList() {
+            document.getElementById('nb-list').innerHTML = notebooks.map(n =>
+                `<div class="nb-item${curNb && curNb.id === n.id ? ' on' : ''}" onclick="openNb(${n.id})"><div class="nb-item-t">${n.title}</div><div class="nb-item-d">${n.updated_at || ''}</div></div>`
+            ).join('') || '<div class="empty">No notebooks yet</div>';
+        }
+        async function newNb() {
+            try { const n = await api('/notebooks?title=Untitled', 'POST'); notebooks.unshift(n); renderNbList(); openNb(n.id); toast('Notebook created') } catch (e) { toast(e.message) }
+        }
+        async function openNb(id) {
+            curNb = notebooks.find(n => n.id === id); if (!curNb) return;
+            renderNbList();
+            document.getElementById('nb-main').innerHTML = `
+    <div class="nb-bar">
+      <button class="btn btn-o btn-sm" onclick="saveNb()">Save</button>
+      <button class="btn btn-o btn-sm" onclick="openShareNb()">Share</button>
+      <button class="btn btn-r btn-sm" onclick="delNb()">Delete</button>
+    </div>
+    <input class="nb-title-input" id="nb-t" value="${curNb.title}" placeholder="Title">
+    <textarea class="nb-editor" id="nb-c" placeholder="Start writing...">${curNb.content || ''}</textarea>`;
+        }
+        async function saveNb() {
+            if (!curNb) return;
+            const t = document.getElementById('nb-t').value, c = document.getElementById('nb-c').value;
+            try { const u = await api(`/notebooks/${curNb.id}`, 'PUT', { title: t, content: c }); curNb.title = u.title; curNb.content = u.content; renderNbList(); toast('Saved') } catch (e) { toast(e.message) }
+        }
+        async function delNb() {
+            if (!curNb || !confirm('Delete this notebook?')) return;
+            try { await api(`/notebooks/${curNb.id}`, 'DELETE'); notebooks = notebooks.filter(n => n.id !== curNb.id); curNb = null; renderNbList(); document.getElementById('nb-main').innerHTML = '<div class="empty">Select or create a notebook</div>'; toast('Deleted') } catch (e) { toast(e.message) }
+        }
+        function openShareNb() {
+            if (!curNb) return;
+            const sel = document.getElementById('ms-ws');
+            sel.innerHTML = workspaces.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+            if (!workspaces.length) sel.innerHTML = '<option>No workspaces</option>';
+            document.getElementById('m-share-nb').classList.add('vis');
+        }
+        async function doShareNb() {
+            if (!curNb) return;
+            const wsId = +document.getElementById('ms-ws').value, perm = document.getElementById('ms-perm').value;
+            try { await api(`/notebooks/${curNb.id}/share`, 'POST', { workspace_id: wsId, permission: perm }); toast('Shared'); closeModal('m-share-nb') } catch (e) { toast(e.message) }
+        }
+
+        /* ── Workspaces ── */
+        async function loadWss() {
+            try { workspaces = await api('/workspaces'); renderWsList() } catch (e) { console.error(e) }
+        }
+        function renderWsList() {
+            document.getElementById('ws-list').innerHTML = workspaces.map(w =>
+                `<div class="ws-item${curWs && curWs.id === w.id ? ' on' : ''}" onclick="openWs(${w.id})"><div class="ws-item-t">${w.name}</div></div>`
+            ).join('') || '<div class="empty">No workspaces</div>';
+        }
+        async function newWs() {
+            const name = prompt('Workspace name:'); if (!name) return;
+            try { const w = await api('/workspaces', 'POST', { name }); workspaces.unshift(w); renderWsList(); openWs(w.id); toast('Workspace created') } catch (e) { toast(e.message) }
+        }
+        async function openWs(id) {
+            curWs = workspaces.find(w => w.id === id) || { id, name: 'Workspace' };
+            renderWsList();
+            document.getElementById('ws-right').style.display = '';
+            // Load chat
+            try {
+                const msgs = await api(`/workspaces/${id}/chat`);
+                const area = msgs.map(m => `<div class="ws-msg"><div class="ws-msg-u">${m.username} · ${m.role}</div><div class="ws-msg-t${m.role === 'assistant' ? ' ast' : ''}">${m.content}${m.role === 'assistant' ? '<button class="save-btn" title="Save to Notebook" onclick="saveWsAns(this)"></button>' : ''}</div></div>`).join('');
+                document.getElementById('ws-main').innerHTML = `
+      <div style="padding:16px 24px;border-bottom:1px solid var(--g150);font-weight:600">${curWs.name}</div>
+      <div class="ws-chat-area" id="ws-chat">${area || '<div class="empty">No messages yet. Start chatting!</div>'}</div>
+      <div class="ws-chat-input"><input type="text" id="ws-msg-in" placeholder="Ask something…" onkeydown="if(event.key==='Enter')sendWsMsg()"><button class="btn btn-b btn-sm" onclick="sendWsMsg()">Send</button></div>`;
+            } catch (e) { console.error(e) }
+            // Load members
+            try { const m = await api(`/workspaces/${id}/members`); document.getElementById('ws-members').innerHTML = m.map(x => `<div class="member-item"><span>${x.username}</span><span style="color:var(--g400)">${x.permission}</span></div>`).join('') || '<div class="empty">No members</div>' } catch (e) { }
+            // Load docs
+            try { const d = await api(`/workspaces/${id}/docs`); document.getElementById('ws-docs').innerHTML = d.map(x => `<div class="toggle-row"><span>${x.doc_name}</span><div class="toggle${x.enabled ? ' on' : ''}" onclick="toggleWsDoc('${x.doc_id}')"></div></div>`).join('') || '<div style="font-size:.75rem;color:var(--g400)">No docs shared</div>' } catch (e) { }
+            // Load shared notebooks
+            try { const n = await api(`/workspaces/${id}/notebooks`); document.getElementById('ws-nbs').innerHTML = n.map(x => `<div class="toggle-row"><span>${x.title} <span style="color:var(--g400)">(${x.permission})</span></span></div>`).join('') || '<div style="font-size:.75rem;color:var(--g400)">No notebooks shared</div>' } catch (e) { }
+        }
+        async function sendWsMsg() {
+            if (!curWs) return;
+            const inp = document.getElementById('ws-msg-in'), msg = inp.value.trim(); if (!msg) return; inp.value = '';
+            const chat = document.getElementById('ws-chat');
+            chat.innerHTML += `<div class="ws-msg"><div class="ws-msg-u">${user.username} · user</div><div class="ws-msg-t">${msg}</div></div>`;
+            chat.innerHTML += `<div class="ws-msg" id="ws-typing"><div class="ws-msg-u">L90 · assistant</div><div class="ws-msg-t ast"><div class="spinner" style="border-color:var(--g300);border-top-color:var(--bk)"></div></div></div>`;
+            chat.scrollTop = chat.scrollHeight;
+            try {
+                const d = await api(`/workspaces/${curWs.id}/chat`, 'POST', { content: msg });
+                document.getElementById('ws-typing')?.remove();
+                chat.innerHTML += `<div class="ws-msg"><div class="ws-msg-u">L90 · assistant</div><div class="ws-msg-t ast">${d.answer}<button class="save-btn" title="Save to Notebook" onclick="saveWsAns(this)"></button></div></div>`;
+                chat.scrollTop = chat.scrollHeight;
+            } catch (e) { document.getElementById('ws-typing')?.remove(); toast(e.message) }
+        }
+        function saveWsAns(btn) {
+            const txt = btn.parentElement.textContent; window._lastAnswer = txt; buildSaveMenu();
+            // Quick save to first notebook
+            if (notebooks.length) { saveToNb(notebooks[0].id) } else { toast('Create a notebook first') }
+        }
+        async function toggleWsDoc(docId) {
+            if (!curWs) return;
+            try { await api(`/workspaces/${curWs.id}/docs/${docId}/toggle`, 'PUT'); openWs(curWs.id) } catch (e) { toast(e.message) }
+        }
+        function openAddMember() { document.getElementById('m-member').classList.add('vis') }
+        async function doAddMember() {
+            if (!curWs) return;
+            const u = document.getElementById('mm-user').value.trim(), p = document.getElementById('mm-perm').value;
+            if (!u) return;
+            try { await api(`/workspaces/${curWs.id}/members`, 'POST', { username: u, permission: p }); toast('Member added'); closeModal('m-member'); openWs(curWs.id) } catch (e) { toast(e.message) }
+        }
+
+        /* ── Modal ── */
+        function closeModal(id) { document.getElementById(id).classList.remove('vis') }
+
+        /* ── Toast ── */
+        function toast(m) { const e = document.createElement('div'); e.className = 'toast'; e.textContent = m; document.getElementById('toasts').appendChild(e); setTimeout(() => { e.style.opacity = '0'; e.style.transition = 'opacity .3s'; setTimeout(() => e.remove(), 300) }, 3000) }
+    </script>
+</body>
+
+</html>

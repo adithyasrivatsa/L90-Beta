@@ -1,15 +1,19 @@
 """Planner — the Manager's internal planning/reasoning engine.
 
 Generates a structured ExecutionPlan before any agents are dispatched.
+Enhanced: detects math/physics needs, LaTeX requirements, complexity level.
+Includes a fast local classifier to skip LLM calls for obvious BASIC queries.
 """
 
 from __future__ import annotations
 
 import json
 import logging
+import re
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+from l90 import config
 from l90.blackboard.blackboard import Blackboard
 from l90.models.provider import ModelProvider
 from l90.tracing.logger import ReasoningTraceLogger
@@ -17,9 +21,10 @@ from l90.tracing.logger import ReasoningTraceLogger
 logger = logging.getLogger(__name__)
 
 PLANNING_SYSTEM_PROMPT = """\
-You are the Planning Engine of L90, a zero-hallucination scientific RAG system.
+You are the Planning Engine of L90, a NASA/DARPA-grade zero-hallucination scientific RAG system.
+Organizations like NASA, DARPA, and top research labs rely on this system for critical decisions.
 
-Your job is to analyze the user's query and produce a structured execution plan.
+Your job is to analyze the user's query and produce a precise execution plan.
 
 Given:
 - The user's query
@@ -34,6 +39,10 @@ You MUST output a JSON object with exactly these fields:
   "num_retrieval_agents": <1-5>,
   "requires_math_verification": <true|false>,
   "requires_physics_verification": <true|false>,
+  "requires_code_verification": <true|false>,
+  "requires_latex": <true|false>,
+  "complexity_level": "<BASIC|INTERMEDIATE|ADVANCED|RESEARCH_GRADE>",
+  "question_domain": "<physics|math|chemistry|engineering|biology|general|mixed>",
   "max_correction_loops": <0-3>,
   "reasoning": "<brief explanation of why this plan was chosen>"
 }
@@ -46,9 +55,50 @@ Rules:
 - In WORKSPACE mode, workspace_collection and approved_library_collection.
 - Use multi_pass for complex multi-step queries.
 - Use targeted for queries about specific documents.
-- Enable math/physics verification for technical queries.
-- Set num_retrieval_agents higher for broad queries.
+- Set requires_code_verification=true when:
+  a. The query involves numerical calculations or solving equations
+  b. The query asks to derive, prove, or verify a formula
+  c. The query involves physics calculations with units
+  d. ANY mathematical claim that needs to be verified computationally
+- Set requires_latex=true when the answer will contain equations, formulas, or mathematical expressions.
+- Set complexity_level based on domain expertise needed:
+  BASIC: simple factual lookup
+  INTERMEDIATE: requires connecting 2-3 concepts
+  ADVANCED: requires deep domain expertise, multi-step reasoning
+  RESEARCH_GRADE: cutting-edge, requires synthesis across multiple fields
+- Set num_retrieval_agents higher for broad queries (3-5 for RESEARCH_GRADE).
+- Enable math/physics verification for ALL technical queries.
 """
+
+# ── Fast classifier patterns ──────────────────────────────────
+_BASIC_PATTERNS = [
+    r"^what\s+is\b",
+    r"^who\s+is\b",
+    r"^when\s+(was|did|is)\b",
+    r"^where\s+(is|was|are)\b",
+    r"^define\b",
+    r"^what\s+does\b.*\bmean\b",
+    r"^tell\s+me\s+about\b",
+    r"^explain\s+(?!how\s+to\s+derive|the\s+derivation)",
+    r"^list\b",
+    r"^name\b",
+    r"^(hi|hello|hey)\b",
+]
+_BASIC_RE = re.compile("|".join(_BASIC_PATTERNS), re.IGNORECASE)
+
+_ADVANCED_KEYWORDS = {
+    "derive", "derivation", "prove", "proof", "integrate", "differentiate",
+    "eigenvalue", "eigenvector", "tensor", "lagrangian", "hamiltonian",
+    "schrödinger", "navier-stokes", "fourier transform", "laplace",
+    "differential equation", "boundary condition", "perturbation",
+    "renormalization", "quantum", "relativistic", "thermodynamic",
+}
+
+_MATH_KEYWORDS = {
+    "calculate", "compute", "solve", "equation", "formula", "integral",
+    "derivative", "limit", "sum", "product", "matrix", "vector",
+    "sin", "cos", "tan", "log", "ln", "sqrt", "pi", "sigma",
+}
 
 
 @dataclass
@@ -61,6 +111,10 @@ class ExecutionPlan:
     num_retrieval_agents: int = 1
     requires_math_verification: bool = False
     requires_physics_verification: bool = False
+    requires_code_verification: bool = False
+    requires_latex: bool = False
+    complexity_level: str = "BASIC"
+    question_domain: str = "general"
     max_correction_loops: int = 3
     reasoning: str = ""
 
@@ -80,14 +134,82 @@ class PlannerLayer:
     def __init__(self, trace_logger: ReasoningTraceLogger | None = None) -> None:
         self._trace = trace_logger
 
+    def _fast_classify(self, query: str) -> ExecutionPlan | None:
+        """Heuristic-based fast classifier for obvious query types.
+
+        Returns an ExecutionPlan for BASIC/simple queries without calling LLM.
+        Returns None if the query needs LLM-based planning.
+        """
+        q_lower = query.lower().strip()
+
+        # Check for advanced keywords — need full LLM planning
+        for kw in _ADVANCED_KEYWORDS:
+            if kw in q_lower:
+                return None  # need LLM planner
+
+        # Check for math content — need at least INTERMEDIATE
+        has_math = any(kw in q_lower for kw in _MATH_KEYWORDS)
+        if has_math:
+            return None  # need LLM planner
+
+        # Check for BASIC patterns
+        if _BASIC_RE.search(q_lower):
+            return ExecutionPlan(
+                retrieval_strategy="single_pass",
+                num_retrieval_agents=1,
+                complexity_level="BASIC",
+                question_domain="general",
+                max_correction_loops=0,
+                reasoning="Fast-classified as BASIC factual query",
+            )
+
+        # Short queries (< 15 words) without technical keywords → BASIC
+        if len(q_lower.split()) < 15 and "?" in query:
+            return ExecutionPlan(
+                retrieval_strategy="single_pass",
+                num_retrieval_agents=1,
+                complexity_level="BASIC",
+                question_domain="general",
+                max_correction_loops=0,
+                reasoning="Fast-classified: short question without technical keywords",
+            )
+
+        return None  # not obvious — use LLM planner
+
     async def create_plan(
         self,
         blackboard: Blackboard,
     ) -> ExecutionPlan:
         """Analyze the query on the Blackboard and produce an ExecutionPlan.
 
-        Uses the manager model to generate the plan as structured JSON.
+        First tries fast local classification. Falls back to LLM planning
+        for non-trivial queries.
         """
+        # ── Fast path: local classifier ────────────────────────
+        if config.FAST_PATH_ENABLED:
+            fast_plan = self._fast_classify(blackboard.query)
+            if fast_plan is not None:
+                fast_plan.mode = blackboard.mode
+                fast_plan.allowed_collections = blackboard.allowed_sources
+                # Record the plan
+                if self._trace:
+                    self._trace.log(
+                        agent_name="PlannerLayer",
+                        phase="planning",
+                        action="fast_classify",
+                        output_summary=f"Complexity: {fast_plan.complexity_level}",
+                        decision=fast_plan.reasoning,
+                    )
+                blackboard.execution_plan = fast_plan.to_dict()
+                blackboard.add_trace(
+                    agent_name="PlannerLayer",
+                    phase="planning",
+                    action="fast_plan_created",
+                    details=fast_plan.to_dict(),
+                )
+                return fast_plan
+
+        # ── Full path: LLM-based planning ──────────────────────
         model = ModelProvider.get_manager_model()
 
         prompt = (
@@ -113,6 +235,10 @@ class PlannerLayer:
                 num_retrieval_agents=result.get("num_retrieval_agents", 1),
                 requires_math_verification=result.get("requires_math_verification", False),
                 requires_physics_verification=result.get("requires_physics_verification", False),
+                requires_code_verification=result.get("requires_code_verification", False),
+                requires_latex=result.get("requires_latex", False),
+                complexity_level=result.get("complexity_level", "BASIC"),
+                question_domain=result.get("question_domain", "general"),
                 max_correction_loops=result.get("max_correction_loops", 3),
                 reasoning=result.get("reasoning", ""),
             )
@@ -132,7 +258,14 @@ class PlannerLayer:
                 phase="planning",
                 action="create_execution_plan",
                 input_summary=f"Query: {blackboard.query[:100]}",
-                output_summary=f"Strategy: {plan.retrieval_strategy}, Agents: {plan.num_retrieval_agents}",
+                output_summary=(
+                    f"Strategy: {plan.retrieval_strategy}, "
+                    f"Agents: {plan.num_retrieval_agents}, "
+                    f"CodeVerify: {plan.requires_code_verification}, "
+                    f"LaTeX: {plan.requires_latex}, "
+                    f"Complexity: {plan.complexity_level}, "
+                    f"Domain: {plan.question_domain}"
+                ),
                 decision=plan.reasoning,
             )
 

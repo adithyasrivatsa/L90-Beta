@@ -67,7 +67,7 @@ class IngestionPipeline:
             separators=["\n\n", "\n", ". ", " ", ""],
         )
 
-    def ingest(
+    async def ingest(
         self,
         file_path: str | Path,
         collection_name: str,
@@ -140,7 +140,7 @@ class IngestionPipeline:
             ids.append(f"{doc_id}_chunk_{i}")
 
         # Store in ChromaDB (embedding handled by collection's embedding function)
-        self._store.add_documents(
+        await self._store.add_documents(
             collection_name=collection_name,
             documents=chunks,
             metadatas=metadatas,
@@ -155,7 +155,7 @@ class IngestionPipeline:
         )
         return len(chunks)
 
-    def ingest_approved_library_document(
+    async def ingest_approved_library_document(
         self,
         file_path: str | Path,
         *,
@@ -170,7 +170,7 @@ class IngestionPipeline:
         Only system administrators should call this.
         """
         path = Path(file_path)
-        return self.ingest(
+        return await self.ingest(
             file_path=path,
             collection_name=config.COLLECTION_APPROVED_LIBRARY,
             source_type="approved_library",

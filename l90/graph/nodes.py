@@ -7,8 +7,10 @@ from typing import Any
 
 from l90.agents.analyzer import AnalysisAgent
 from l90.agents.corrector import CorrectionAgent
+from l90.agents.deep_reasoner import DeepReasoningAgent
 from l90.agents.generator import GeneratorAgent
 from l90.agents.manager import ManagerAgent
+from l90.agents.math_executor import MathExecutorAgent
 from l90.agents.retriever import RetrieverAgent
 from l90.agents.verifier import VerificationAgent
 from l90.blackboard.blackboard import Blackboard
@@ -54,6 +56,9 @@ def _state_to_blackboard(state: GraphState) -> Blackboard:
     bb.reasoning_trace = state.get("reasoning_trace", [])
     bb.execution_plan = state.get("execution_plan", {})
     bb.grounding_report = state.get("grounding_report", {})
+    bb.code_verification = state.get("code_verification", {})
+    bb.deep_reasoning = state.get("deep_reasoning", [])
+    bb.latex_equations = state.get("latex_equations", [])
     bb.metadata = state.get("metadata", {})
     return bb
 
@@ -121,23 +126,42 @@ async def grounding_node(state: GraphState) -> dict[str, Any]:
     return _blackboard_to_state(bb)
 
 
+# ── New Nodes ──────────────────────────────────────────────────
+
+async def math_executor_node(state: GraphState) -> dict[str, Any]:
+    """Math Executor node — runs Python to prove math/physics results."""
+    bb = _state_to_blackboard(state)
+    agent = MathExecutorAgent(trace_logger=_trace_logger)
+    bb = await agent.execute(bb)
+    return _blackboard_to_state(bb)
+
+
+async def deep_reasoning_node(state: GraphState) -> dict[str, Any]:
+    """Deep Reasoning node — synthesizes reasoning chain via LLM."""
+    bb = _state_to_blackboard(state)
+    agent = DeepReasoningAgent(trace_logger=_trace_logger)
+    bb = await agent.execute(bb)
+    return _blackboard_to_state(bb)
+
+
 # ── Conditional routing functions ──────────────────────────────
 
-def should_correct_or_generate(state: GraphState) -> str:
-    """Route after verification: correct if failed, generate if passed."""
+def should_correct_or_continue(state: GraphState) -> str:
+    """Route after verification: 'corrector' if failed, 'continue' if passed."""
     from l90 import config
 
+    # If verification passed, move forward
     if state.get("verification_passed", False):
-        return "generator"
+        return "continue"
 
     loop_count = state.get("correction_loop_count", 0)
     max_loops = config.MAX_CORRECTION_LOOPS
 
     if loop_count >= max_loops:
         logger.warning(
-            "Max correction loops (%d) reached. Proceeding to generator.",
+            "Max correction loops (%d) reached. Proceeding force-forward.",
             max_loops,
         )
-        return "generator"
+        return "continue"
 
     return "corrector"

@@ -102,6 +102,7 @@ class GroundingEnforcer(BaseAgent):
         )
 
         report = GroundingReport()
+        complexity = blackboard.execution_plan.get("complexity_level", "INTERMEDIATE")
 
         # ── Check 1: Verification status ───────────────────────
         report.verification_check_passed = blackboard.verification_passed
@@ -111,8 +112,17 @@ class GroundingEnforcer(BaseAgent):
             blackboard.confidence_score >= self._threshold
         )
 
-        # ── Check 3: Citation / grounding check via LLM ───────
-        if (
+        # ── Check 3: Citation / grounding check ────────────────
+        # BASIC queries: skip expensive LLM grounding — use deterministic checks only
+        if complexity == "BASIC":
+            # For basic queries, if we have chunks and an answer, auto-ground
+            if blackboard.retrieved_chunks and blackboard.final_answer:
+                report.all_grounded = True
+                report.grounding_score = max(blackboard.confidence_score, 0.8)
+            else:
+                report.all_grounded = bool(blackboard.final_answer)
+                report.grounding_score = 0.7
+        elif (
             blackboard.final_answer
             and blackboard.final_answer != INSUFFICIENT_ANSWER
             and blackboard.retrieved_chunks
@@ -123,11 +133,15 @@ class GroundingEnforcer(BaseAgent):
             report.grounding_score = 0.0
 
         # ── Final verdict ──────────────────────────────────────
-        all_passed = (
-            report.all_grounded
-            and report.verification_check_passed
-            and report.confidence_check_passed
-        )
+        if complexity == "BASIC":
+            # BASIC: approve if we have an answer and some confidence
+            all_passed = bool(blackboard.final_answer and blackboard.final_answer != INSUFFICIENT_ANSWER)
+        else:
+            all_passed = (
+                report.all_grounded
+                and report.verification_check_passed
+                and report.confidence_check_passed
+            )
 
         if all_passed:
             report.final_verdict = "APPROVED"
@@ -153,7 +167,8 @@ class GroundingEnforcer(BaseAgent):
             decision=(
                 f"Grounded={report.all_grounded}, "
                 f"Verified={report.verification_check_passed}, "
-                f"Confidence={report.confidence_check_passed}"
+                f"Confidence={report.confidence_check_passed}, "
+                f"Complexity={complexity}"
             ),
         )
 

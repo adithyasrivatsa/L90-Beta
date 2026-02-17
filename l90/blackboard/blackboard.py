@@ -55,6 +55,15 @@ class Blackboard:
     # ── Grounding ──────────────────────────────────────────────
     grounding_report: dict[str, Any] = field(default_factory=dict)
 
+    # ── Code Verification (math/physics proofs) ────────────────
+    code_verification: dict[str, Any] = field(default_factory=dict)
+
+    # ── Deep Reasoning (Partial mode synthesis) ────────────────
+    deep_reasoning: list[dict[str, Any]] = field(default_factory=list)
+
+    # ── LaTeX Equations ────────────────────────────────────────
+    latex_equations: list[str] = field(default_factory=list)
+
     # ── Metadata ───────────────────────────────────────────────
     metadata: dict[str, Any] = field(default_factory=dict)
     created_at: float = field(default_factory=time.time)
@@ -105,6 +114,9 @@ class Blackboard:
             "reasoning_trace": self.reasoning_trace,
             "execution_plan": self.execution_plan,
             "grounding_report": self.grounding_report,
+            "code_verification": self.code_verification,
+            "deep_reasoning": self.deep_reasoning,
+            "latex_equations": self.latex_equations,
             "metadata": self.metadata,
             "created_at": self.created_at,
         }
@@ -127,4 +139,7 @@ class Blackboard:
         self.reasoning_trace = []
         self.execution_plan = {}
         self.grounding_report = {}
+        self.code_verification = {}
+        self.deep_reasoning = []
+        self.latex_equations = []
         self.metadata = {}
